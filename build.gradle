@@ -1,0 +1,105 @@
+apply plugin: GitVersionPlugin
+
+println version
+
+import java.util.regex.Pattern
+
+class GitVersionPlugin implements Plugin<Project> {
+
+    Project project
+    String baseVersion
+
+    void apply(Project project) {
+        this.project = project
+        this.baseVersion = project.baseVersion
+        project.version = resolveVersionString()
+        project.ext.gitTag = getReleaseTag()
+        project.task('tag') {
+            doLast {
+                doTag()
+            }
+        }
+    }
+
+    private doTag() {
+        def currentReleaseTags = getCurrentReleaseTags()
+        if (!currentReleaseTags.isEmpty()) {
+            printAlreadyTagged(currentReleaseTags)
+            return
+        }
+        def prefix = "v$baseVersion."
+        def tags = execForOutput('git', 'tag', '-l', "$prefix*")
+                .split('\n')
+                .findAll { !it.isEmpty() }
+        def nextPatch = tags
+                .collect { it.substring(prefix.length()).replaceFirst(/\D.+/, '') }
+                .findAll { !it.isEmpty() }
+                .collect { Integer.parseInt(it) }
+                .max()?.with { it + 1 } ?: 0
+        def tag = "$prefix$nextPatch"
+        println execForOutput('git', 'tag', tag)
+
+        printCreatedTag(tag)
+    }
+
+    private printCreatedTag(String tag) {
+        println """
+            Created tag $tag
+
+            Commands:
+
+                git tag --delete $tag # To delete
+                git push origin $tag  # To push
+
+            Version: ${resolveVersionString()}""".stripIndent()
+    }
+
+    private printAlreadyTagged(List<String> currentReleaseTags) {
+        def currentTags = currentReleaseTags.join(' ')
+            println """
+                Already tagged: $currentTags
+
+                ... do nothing
+
+                Commands:
+
+                    git tag --delete $currentTags # To delete""".stripIndent()
+    }
+
+    private String resolveVersionString() {
+        def currentReleaseTag = getReleaseTag()
+        return currentReleaseTag?.replaceFirst(/^v/, '') ?: "$baseVersion-SNAPSHOT"
+    }
+
+    private String getReleaseTag() {
+        def currentReleaseTags = getCurrentReleaseTags()
+        if (currentReleaseTags.isEmpty()) {
+            return null
+        } else if (currentReleaseTags.size() == 1) {
+            return currentReleaseTags.first()
+        } else {
+            throw new Exception("To manny release tags: $currentReleaseTags")
+        }
+    }
+
+    private ArrayList<String> getCurrentReleaseTags() {
+        def releaseTagPattern = Pattern.quote("v$baseVersion.") + /\d+/
+        execForOutput('git', 'tag', '--points-at', 'HEAD')
+                .split('\n')
+                .findAll { it != null && it.matches(releaseTagPattern) }
+    }
+
+    private String execForOutput(String... arguments) {
+        try {
+            def stdout = new ByteArrayOutputStream()
+            project.exec {
+                commandLine arguments
+                standardOutput = stdout
+            }
+            return stdout.toString()
+        } catch (Exception e) {
+            println "Exception on invoking ${arguments.join(' ')}: $e"
+            return ""
+        }
+    }
+}
