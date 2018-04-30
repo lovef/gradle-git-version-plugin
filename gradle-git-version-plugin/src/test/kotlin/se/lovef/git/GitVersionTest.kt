@@ -14,6 +14,14 @@ class GitVersionTest {
 
     private val git = object : Git {
         override var currentTags: List<String> = emptyList()
+
+        override fun tag(name: String) {
+            currentTags += name
+        }
+
+        var matchingTags: Map<String, List<String>> = emptyMap()
+
+        override fun matchingTags(prefix: String) = matchingTags[prefix] ?: emptyList()
     }
 
     @Test fun `version defaults to base version with -SNAPSHOT suffix`() {
@@ -42,39 +50,34 @@ class GitVersionTest {
         gitVersion.version shouldEqual "1.0-SNAPSHOT"
     }
 
-    @Test fun `get current version tag`() {
+
+    @Test fun `create release tag`() {
         val gitVersion = GitVersion(git, baseVersion = "1.0")
 
-        git.currentTags = emptyList()
-        gitVersion.getCurrentReleaseTag().shouldBeNull()
-
-        git.currentTags = listOf("v1.0.0")
-        gitVersion.getCurrentReleaseTag() shouldEqual "v1.0.0"
+        gitVersion.createTag() shouldEqual "v1.0.0"
+        git.currentTags shouldEqual listOf("v1.0.0")
+        gitVersion.version shouldEqual "1.0.0"
     }
 
-    @Test fun `current release tag must match base version`() {
+    @Test fun `patch number is incremented when creating new tag`() {
         val gitVersion = GitVersion(git, baseVersion = "1.0")
 
-        git.currentTags = listOf("v1.0.123")
-        gitVersion.getCurrentReleaseTag() shouldEqual "v1.0.123"
+        git.matchingTags = mapOf("v1.0." to listOf("v1.0.0", "v1.0.10", "v1.0.2")) // Scrambled list
 
-        git.currentTags = listOf("v0.1.123")
-        gitVersion.getCurrentReleaseTag().shouldBeNull()
-
-        git.currentTags = listOf("v0.1.123", "v1.0.123")
-        gitVersion.getCurrentReleaseTag() shouldEqual "v1.0.123"
+        gitVersion.createTag() shouldEqual "v1.0.11"
+        git.currentTags shouldEqual listOf("v1.0.11")
     }
 
-    @Test fun `to many release tags result in an exception`() {
+    @Test fun `create release tag fails if current tag exists`() {
         val gitVersion = GitVersion(git, baseVersion = "1.0")
 
         val matchingReleaseTags = listOf("v1.0.0", "v1.0.1")
         git.currentTags = listOf("v0.1.0") + matchingReleaseTags
 
-        { gitVersion.getCurrentReleaseTag() }
-            .throws(MultipleReleaseTagsException::class)
+        { gitVersion.createTag() }
+            .throws(AlreadyTaggedException::class)
             .also {
-                it.releaseTags shouldEqual matchingReleaseTags
+                it.tags shouldEqual matchingReleaseTags
                 it.message shouldContain matchingReleaseTags
             }
     }
