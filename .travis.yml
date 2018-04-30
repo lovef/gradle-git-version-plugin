@@ -15,3 +15,10 @@ cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
+
+deploy:
+  provider: script
+  script: ./gradlew clean bintrayUpload
+  skip_cleanup: true
+  on:
+    tags: true
