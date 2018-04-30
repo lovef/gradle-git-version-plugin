@@ -1,6 +1,24 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
 apply plugin: GitVersionPlugin
 
 println version
+
+allprojects {
+    version = rootProject.version
+    group 'se.lovef'
+
+    repositories {
+        mavenCentral()
+    }
+}
 
 import java.util.regex.Pattern
 

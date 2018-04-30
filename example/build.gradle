@@ -1,0 +1,13 @@
+buildscript {
+    repositories {
+        maven { url = '../gradle-git-version-plugin/build/repo' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath "se.lovef:gradle-git-version-plugin:0.0-SNAPSHOT"
+    }
+}
+
+apply plugin: 'se.lovef.git-version'
+
+println "Version: $version"

@@ -1,0 +1,70 @@
+apply plugin: 'kotlin'
+apply plugin: 'maven-publish'
+
+description = "Gradle Git Version Plugin"
+
+println "$group:${project.name}:$version"
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile gradleApi()
+    compile localGroovy()
+
+    testCompile 'se.lovef:kotlin-assert-utils:0.5.0'
+}
+
+//noinspection GroovyAssignabilityCheck,GrUnresolvedAccess
+task sourceJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+def mavenDir = "build/repo"
+
+def info = [
+        "github": "https://github.com/lovef/gradle-git-version",
+        "git"   : "https://github.com/lovef/gradle-git-version.git",
+        "issues": "https://github.com/lovef/gradle-git-version/issues",
+]
+
+//noinspection GrUnresolvedAccess
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact sourceJar
+            from components.java
+            pom.withXml {
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    name project.name
+                    description description
+                    url info.github
+                    scm {
+                        url info.github
+                        connection "scm:git:${info.git}"
+                        developerConnection "scm:git:${info.git}"
+                    }
+                    licenses {
+                        license {
+                            name 'Apache License Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0'
+                            distribution 'repo'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id 'lovef'
+                            name 'Love F'
+                            email 'lovef.code@gmail.com'
+                        }
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url mavenDir
+        }
+    }
+}
