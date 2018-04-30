@@ -92,7 +92,7 @@ bintray {
         //noinspection GroovyAssignabilityCheck
         version {
             name = project.version
-            vcsTag = project.gitTag
+            vcsTag = gitVersion.tag
             desc = project.description
             //noinspection GrUnresolvedAccess
             gpg {
