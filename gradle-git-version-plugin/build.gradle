@@ -14,11 +14,6 @@ dependencies {
     testCompile 'se.lovef:kotlin-assert-utils:0.5.0'
 }
 
-//noinspection GroovyAssignabilityCheck,GrUnresolvedAccess
-task sourceJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
 
 def mavenDir = "build/repo"
 
@@ -28,12 +23,31 @@ def info = [
         "issues": "https://github.com/lovef/gradle-git-version/issues",
 ]
 
+//noinspection GroovyAssignabilityCheck,GrUnresolvedAccess
+task sourceJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+sourceSets {
+    javadoc { resources { srcDir 'src/main/javadoc' } }
+}
+
+/** Creates a javadoc jar with README to comply with Sonatypes requirements:
+ * http://central.sonatype.org/pages/requirements.html */
+//noinspection GroovyAssignabilityCheck,GrUnresolvedAccess
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from sourceSets.javadoc.output
+}
+
 //noinspection GrUnresolvedAccess
 publishing {
     publications {
         maven(MavenPublication) {
-            artifact sourceJar
             from components.java
+            artifact sourceJar
+            artifact javadocJar
             pom.withXml {
                 asNode().children().last() + {
                     resolveStrategy = Closure.DELEGATE_FIRST
