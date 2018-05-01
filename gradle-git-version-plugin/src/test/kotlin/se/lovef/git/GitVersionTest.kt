@@ -13,10 +13,16 @@ import se.lovef.assert.v1.throws
 class GitVersionTest {
 
     private val git = object : Git {
+
         override var currentTags: List<String> = emptyList()
 
         override fun tag(name: String) {
             currentTags += name
+        }
+
+        val publishedTags = ArrayList<String>()
+        override fun publishTag(name: String) {
+            publishedTags += name
         }
 
         var matchingTags: Map<String, List<String>> = emptyMap()
@@ -24,15 +30,13 @@ class GitVersionTest {
         override fun matchingTags(prefix: String) = matchingTags[prefix] ?: emptyList()
     }
 
-    @Test fun `version defaults to base version with -SNAPSHOT suffix`() {
-        val gitVersion = GitVersion(git, baseVersion = "1.0")
+    private val gitVersion = GitVersion(git, baseVersion = "1.0")
 
+    @Test fun `version defaults to base version with -SNAPSHOT suffix`() {
         gitVersion.version shouldEqual "1.0-SNAPSHOT"
     }
 
     @Test fun `version is taken from current release tag if it exists`() {
-        val gitVersion = GitVersion(git, baseVersion = "1.0")
-
         git.currentTags = listOf("v1.0.123")
         gitVersion.version shouldEqual "1.0.123"
 
@@ -41,8 +45,6 @@ class GitVersionTest {
     }
 
     @Test fun `multiple or no release tags results in default version`() {
-        val gitVersion = GitVersion(git, baseVersion = "1.0")
-
         git.currentTags = listOf("v0.1.123")
         gitVersion.version shouldEqual "1.0-SNAPSHOT"
 
@@ -52,24 +54,18 @@ class GitVersionTest {
 
 
     @Test fun `current release tag`() {
-        val gitVersion = GitVersion(git, baseVersion = "1.0")
-
         git.currentTags = listOf("v0.0.0", "v1.0.0", "v2.0.0")
 
         gitVersion.tag shouldEqual "v1.0.0"
     }
 
     @Test fun `current release tag default null`() {
-        val gitVersion = GitVersion(git, baseVersion = "1.0")
-
         git.currentTags = listOf("v0.0.0", "v2.0.0") // No tag matching the base version
 
         gitVersion.tag.shouldBeNull()
     }
 
     @Test fun `multiple release tags defaults to null`() {
-        val gitVersion = GitVersion(git, baseVersion = "1.0")
-
         git.currentTags = listOf("v1.0.0", "v1.0.1") // Multiple tags matching the base version
 
         gitVersion.tag.shouldBeNull()
@@ -77,16 +73,12 @@ class GitVersionTest {
 
 
     @Test fun `create release tag`() {
-        val gitVersion = GitVersion(git, baseVersion = "1.0")
-
         gitVersion.createTag() shouldEqual "v1.0.0"
         git.currentTags shouldEqual listOf("v1.0.0")
         gitVersion.version shouldEqual "1.0.0"
     }
 
     @Test fun `patch number is incremented when creating new tag`() {
-        val gitVersion = GitVersion(git, baseVersion = "1.0")
-
         git.matchingTags = mapOf("v1.0." to listOf("v1.0.0", "v1.0.10", "v1.0.2")) // Scrambled list
 
         gitVersion.createTag() shouldEqual "v1.0.11"
@@ -94,8 +86,6 @@ class GitVersionTest {
     }
 
     @Test fun `create release tag fails if current tag exists`() {
-        val gitVersion = GitVersion(git, baseVersion = "1.0")
-
         val matchingReleaseTags = listOf("v1.0.0", "v1.0.1")
         git.currentTags = listOf("v0.1.0") + matchingReleaseTags
 
@@ -105,5 +95,18 @@ class GitVersionTest {
                 it.tags shouldEqual matchingReleaseTags
                 it.message shouldContain matchingReleaseTags
             }
+    }
+
+
+    @Test fun `publish version tag`() {
+        git.currentTags = listOf("v1.0.0")
+        gitVersion.publish()
+        git.publishedTags shouldEqual listOf("v1.0.0")
+    }
+
+    @Test fun `publish version tag fails if there is no tag`() {
+        { gitVersion.publish() }
+            .throws(NoTagException::class)
+            .message shouldContain gitVersion.baseVersion
     }
 }
