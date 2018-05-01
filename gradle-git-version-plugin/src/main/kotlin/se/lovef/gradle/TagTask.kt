@@ -29,8 +29,8 @@ open class TagTask : DefaultTask() {
 
             Commands:
 
-                git tag --delete $tag # To delete
-                git push origin $tag  # To push
+                git tag --delete $tag    # delete
+                git push origin  $tag    # push to origin
 
             New version: ${gitVersion.version}"""
         println(message.trimIndent())
@@ -42,7 +42,7 @@ open class TagTask : DefaultTask() {
 
             Commands:
 
-                git tag --delete ${e.tags.joinToString(" ")} # To delete"""
+                git tag --delete ${e.tags.joinToString(" ")}   # To delete"""
         println(message.trimIndent())
     }
 }

@@ -11,3 +11,12 @@ buildscript {
 apply plugin: 'se.lovef.git-version'
 
 println "Version: $version"
+println "gitVersion: $project.ext.gitVersion"
+
+task printGitVersion {
+    doLast {
+        println "gitVersion: $project.ext.gitVersion"
+    }
+}
+
+printGitVersion.shouldRunAfter tag

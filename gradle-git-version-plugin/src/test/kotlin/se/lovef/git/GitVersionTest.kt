@@ -51,6 +51,31 @@ class GitVersionTest {
     }
 
 
+    @Test fun `current release tag`() {
+        val gitVersion = GitVersion(git, baseVersion = "1.0")
+
+        git.currentTags = listOf("v0.0.0", "v1.0.0", "v2.0.0")
+
+        gitVersion.tag shouldEqual "v1.0.0"
+    }
+
+    @Test fun `current release tag default null`() {
+        val gitVersion = GitVersion(git, baseVersion = "1.0")
+
+        git.currentTags = listOf("v0.0.0", "v2.0.0") // No tag matching the base version
+
+        gitVersion.tag.shouldBeNull()
+    }
+
+    @Test fun `multiple release tags defaults to null`() {
+        val gitVersion = GitVersion(git, baseVersion = "1.0")
+
+        git.currentTags = listOf("v1.0.0", "v1.0.1") // Multiple tags matching the base version
+
+        gitVersion.tag.shouldBeNull()
+    }
+
+
     @Test fun `create release tag`() {
         val gitVersion = GitVersion(git, baseVersion = "1.0")
 

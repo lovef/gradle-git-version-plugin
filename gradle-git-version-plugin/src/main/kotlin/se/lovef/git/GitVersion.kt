@@ -3,13 +3,10 @@ package se.lovef.git
 class GitVersion(private val git: Git, val baseVersion: String) {
 
     val version: String
-        get() = currentReleaseTags.let {
-            return if (it.size == 1) {
-                it.first().substring(1)
-            } else {
-                "$baseVersion-SNAPSHOT"
-            }
-        }
+        get() = tag?.substring(1) ?: "$baseVersion-SNAPSHOT"
+
+    val tag: String?
+        get() = tags.let { if (it.size == 1) it.first() else null }
 
     fun createTag(): String {
         assertNoReleaseTags()
@@ -24,7 +21,7 @@ class GitVersion(private val git: Git, val baseVersion: String) {
     }
 
     private fun assertNoReleaseTags() {
-        val tags = currentReleaseTags
+        val tags = tags
         if (tags.isNotEmpty()) {
             throw AlreadyTaggedException(tags)
         }
@@ -34,10 +31,10 @@ class GitVersion(private val git: Git, val baseVersion: String) {
         return git.matchingTags(prefix)
             .map { it.substring(prefix.length).toInt() }
             .max()
-            ?.let{ it + 1 } ?: 0
+            ?.let { it + 1 } ?: 0
     }
 
-    private val currentReleaseTags: List<String>
+    private val tags: List<String>
         get() = git.currentTags
             .filter { it.startsWith("v$baseVersion.") }
 
