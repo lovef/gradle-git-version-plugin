@@ -34,6 +34,11 @@ class GitVersion(private val git: Git, val baseVersion: String) {
             ?.let { it + 1 } ?: 0
     }
 
+    fun publish() {
+        val name = tag ?: throw NoTagException(baseVersion)
+        git.publishTag(name)
+    }
+
     private val tags: List<String>
         get() = git.currentTags
             .filter { it.startsWith("v$baseVersion.") }
@@ -45,3 +50,7 @@ abstract class GitVersionException(message: String) : RuntimeException(message)
 class AlreadyTaggedException(
     val tags: List<String>
 ) : GitVersionException("Already tagged with $tags")
+
+class NoTagException(
+    baseVersion: String
+) : GitVersionException("There is no tag to publish for base version $baseVersion")

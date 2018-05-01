@@ -14,8 +14,12 @@ class GradleGitVersionPlugin : Plugin<Project> {
         val gitVersion = GitVersion(GradleGit(project), project.properties["baseVersion"] as String)
         project.version = gitVersion.version
         project.extensions.extraProperties["gitVersion"] = ExternalGitVersion(gitVersion)
-        project.tasks.create("tag", TagTask::class.java) {
+        val tagTask = project.tasks.create("tag", TagTask::class.java) {
             it.gitVersion = gitVersion
+        }
+        project.tasks.create("publishTag", PublishTagTask::class.java) {
+            it.gitVersion = gitVersion
+            it.shouldRunAfter(tagTask)
         }
     }
 
