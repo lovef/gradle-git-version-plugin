@@ -99,6 +99,7 @@ bintray {
         labels = ["gradle", "gradle-plugin"]
         websiteUrl = info.github
         vcsUrl = info.git
+        issueTrackerUrl = info.issues
         //noinspection GroovyAssignabilityCheck
         publish = false
         publicDownloadNumbers = true
