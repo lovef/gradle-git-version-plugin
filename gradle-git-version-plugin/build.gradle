@@ -18,9 +18,9 @@ dependencies {
 def mavenDir = "build/repo"
 
 def info = [
-        "github": "https://github.com/lovef/gradle-git-version",
-        "git"   : "https://github.com/lovef/gradle-git-version.git",
-        "issues": "https://github.com/lovef/gradle-git-version/issues",
+        "github": "https://github.com/lovef/gradle-git-version-plugin",
+        "git"   : "https://github.com/lovef/gradle-git-version-plugin.git",
+        "issues": "https://github.com/lovef/gradle-git-version-plugin/issues",
 ]
 
 //noinspection GroovyAssignabilityCheck,GrUnresolvedAccess
