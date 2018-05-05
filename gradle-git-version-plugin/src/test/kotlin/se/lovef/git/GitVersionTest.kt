@@ -14,25 +14,40 @@ class GitVersionTest {
 
     private val git = object : Git {
 
-        override var currentTags: List<String> = emptyList()
+        var shouldThrowException = false
+        fun shouldThrowException() {
+            shouldThrowException = true
+        }
+
+        var currentTags: List<String> = emptyList()
+        override fun currentTags() = if (shouldThrowException) throw Exception() else currentTags
 
         override fun tag(name: String) {
+            if (shouldThrowException) throw Exception()
             currentTags += name
         }
 
         val publishedTags = ArrayList<String>()
         override fun publishTag(name: String) {
+            if (shouldThrowException) throw Exception()
             publishedTags += name
         }
 
         var matchingTags: Map<String, List<String>> = emptyMap()
-
-        override fun matchingTags(prefix: String) = matchingTags[prefix] ?: emptyList()
+        override fun matchingTags(prefix: String) = if (shouldThrowException) throw Exception()
+        else matchingTags[prefix] ?: emptyList()
     }
 
     private val gitVersion = GitVersion(git, baseVersion = "1.0")
 
     @Test fun `version defaults to base version with -SNAPSHOT suffix`() {
+        gitVersion.version shouldEqual "1.0-SNAPSHOT"
+    }
+
+    @Test fun `version returns default on exception`() {
+        git.currentTags = listOf("v1.0.123")
+        gitVersion.version shouldEqual "1.0.123" // Control
+        git.shouldThrowException()
         gitVersion.version shouldEqual "1.0-SNAPSHOT"
     }
 
@@ -71,10 +86,17 @@ class GitVersionTest {
         gitVersion.tag.shouldBeNull()
     }
 
+    @Test fun `current release tag returns null on exception`() {
+        git.currentTags = listOf("v0.0.0", "v1.0.0", "v2.0.0")
+        gitVersion.tag shouldEqual "v1.0.0" // Control
+        git.shouldThrowException()
+        gitVersion.tag.shouldBeNull()
+    }
+
 
     @Test fun `create release tag`() {
         gitVersion.createTag() shouldEqual "v1.0.0"
-        git.currentTags shouldEqual listOf("v1.0.0")
+        git.currentTags() shouldEqual listOf("v1.0.0")
         gitVersion.version shouldEqual "1.0.0"
     }
 
@@ -82,7 +104,7 @@ class GitVersionTest {
         git.matchingTags = mapOf("v1.0." to listOf("v1.0.0", "v1.0.10", "v1.0.2")) // Scrambled list
 
         gitVersion.createTag() shouldEqual "v1.0.11"
-        git.currentTags shouldEqual listOf("v1.0.11")
+        git.currentTags() shouldEqual listOf("v1.0.11")
     }
 
     @Test fun `create release tag fails if current tag exists`() {
