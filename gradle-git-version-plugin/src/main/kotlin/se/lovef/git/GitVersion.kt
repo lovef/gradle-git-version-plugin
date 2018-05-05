@@ -2,6 +2,8 @@ package se.lovef.git
 
 class GitVersion(private val git: Git, val baseVersion: String) {
 
+    constructor(gitExecutor: GitExecutor, baseVersion: String) : this(GitImpl(gitExecutor), baseVersion)
+
     val version: String
         get() = tag?.substring(1) ?: "$baseVersion-SNAPSHOT"
 
@@ -40,9 +42,12 @@ class GitVersion(private val git: Git, val baseVersion: String) {
     }
 
     private val tags: List<String>
-        get() = git.currentTags
-            .filter { it.startsWith("v$baseVersion.") }
-
+        get() =
+            try {
+                git.currentTags().filter { it.startsWith("v$baseVersion.") }
+            } catch (exception: Exception) {
+                emptyList()
+            }
 }
 
 abstract class GitVersionException(message: String) : RuntimeException(message)

@@ -11,7 +11,7 @@ import se.lovef.git.GitVersion
 class GradleGitVersionPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
-        val gitVersion = GitVersion(GradleGit(project), project.properties["baseVersion"] as String)
+        val gitVersion = GitVersion(GradleGitExecutor(project), project.properties["baseVersion"] as String)
         project.version = gitVersion.version
         project.extensions.extraProperties["gitVersion"] = ExternalGitVersion(gitVersion)
         val tagTask = project.tasks.create("tag", TagTask::class.java) {
