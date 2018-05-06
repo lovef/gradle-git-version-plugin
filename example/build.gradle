@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "se.lovef:gradle-git-version-plugin:0.1-SNAPSHOT"
+        classpath "se.lovef:gradle-git-version-plugin:0.2-SNAPSHOT"
     }
 }
 
