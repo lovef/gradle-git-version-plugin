@@ -6,11 +6,6 @@ Set version based on git tags and create new git version tags.
 
 Example:
 
-```properties
-# gradle.properties
-baseVersion = 1.0
-```
-
 ```gradle
 // build.gradle
 
@@ -19,22 +14,24 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "se.lovef:gradle-git-version-plugin:0.0.2"
+        classpath "se.lovef:gradle-git-version-plugin:0.2.0"
     }
 }
 
 apply plugin: 'se.lovef.git-version'
 
-println "Version: $version"
-println "gitVersion: $project.ext.gitVersion"
+version gitVersion('1.0')
 
+println "gitVersion: " + gitVersion
+
+//noinspection GroovyAssignabilityCheck
 task printGitVersion {
     doLast {
-        println "gitVersion: $project.ext.gitVersion"
+        println "gitVersion: " + gitVersion
     }
 }
 
-printGitVersion.shouldRunAfter tag
+printGitVersion.mustRunAfter tag
 ```
 
 Output:
@@ -43,7 +40,6 @@ Output:
 $ ./gradlew tag printGitVersion
 
 > Configure project :
-Version: 1.0-SNAPSHOT
 gitVersion: { version: "1.0-SNAPSHOT", tag: null }
 
 > Task :tag

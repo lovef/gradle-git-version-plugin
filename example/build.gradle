@@ -1,22 +1,23 @@
 buildscript {
     repositories {
-        maven { url = '../gradle-git-version-plugin/build/repo' }
         mavenCentral()
     }
     dependencies {
-        classpath "se.lovef:gradle-git-version-plugin:0.1-SNAPSHOT"
+        classpath "se.lovef:gradle-git-version-plugin:0.2.0"
     }
 }
 
 apply plugin: 'se.lovef.git-version'
 
-println "Version: $version"
-println "gitVersion: $project.ext.gitVersion"
+version gitVersion('1.0')
 
+println "gitVersion: " + gitVersion
+
+//noinspection GroovyAssignabilityCheck
 task printGitVersion {
     doLast {
-        println "gitVersion: $project.ext.gitVersion"
+        println "gitVersion: " + gitVersion
     }
 }
 
-printGitVersion.shouldRunAfter tag
+printGitVersion.mustRunAfter tag
