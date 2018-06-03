@@ -1,5 +1,6 @@
 package se.lovef.git
 
+import org.junit.Before
 import org.junit.Test
 import se.lovef.assert.v1.shouldBeNull
 import se.lovef.assert.v1.shouldContain
@@ -38,7 +39,15 @@ class GitVersionTest {
         else matchingTags[prefix] ?: emptyList()
     }
 
-    private val gitVersion = GitVersion(git, baseVersion = "1.0")
+    object Config : GitVersion.Config {
+        override lateinit var baseVersion: String
+    }
+
+    private val gitVersion = GitVersion(git, Config)
+
+    @Before fun before() {
+        Config.baseVersion = "1.0"
+    }
 
     @Test fun `version defaults to base version with -SNAPSHOT suffix`() {
         gitVersion.version shouldEqual "1.0-SNAPSHOT"
@@ -129,6 +138,6 @@ class GitVersionTest {
     @Test fun `publish version tag fails if there is no tag`() {
         { gitVersion.publish() }
             .throws(NoTagException::class)
-            .message shouldContain gitVersion.baseVersion
+            .message shouldContain gitVersion.config.baseVersion
     }
 }

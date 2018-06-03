@@ -2,7 +2,7 @@
 
 # Gradle Git Version Plugin
 
-Creates version tags in git
+Set version based on git tags and create new git version tags.
 
 Example:
 
@@ -62,3 +62,8 @@ gitVersion: { version: "1.0.0", tag: "v1.0.0" }
 BUILD SUCCESSFUL in 0s
 2 actionable tasks: 2 executed
 ```
+
+## An attribution
+
+This project is in part inspired by
+[Git-Version Gradle Plugin](https://github.com/palantir/gradle-git-version)

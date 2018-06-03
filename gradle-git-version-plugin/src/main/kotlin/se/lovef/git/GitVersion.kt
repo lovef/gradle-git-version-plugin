@@ -1,8 +1,14 @@
 package se.lovef.git
 
-class GitVersion(private val git: Git, val baseVersion: String) {
+class GitVersion(private val git: Git, val config: Config) {
 
-    constructor(gitExecutor: GitExecutor, baseVersion: String) : this(GitImpl(gitExecutor), baseVersion)
+    constructor(gitExecutor: GitExecutor, config: Config) : this(GitImpl(gitExecutor), config)
+
+    interface Config {
+        val baseVersion: String
+    }
+
+    private val baseVersion get() = config.baseVersion
 
     val version: String
         get() = tag?.substring(1) ?: "$baseVersion-SNAPSHOT"
@@ -37,7 +43,7 @@ class GitVersion(private val git: Git, val baseVersion: String) {
     }
 
     fun publish() {
-        val name = tag ?: throw NoTagException(baseVersion)
+        val name = tag ?: throw NoTagException(config.baseVersion)
         git.publishTag(name)
     }
 
