@@ -9,16 +9,9 @@ Example:
 ```gradle
 // build.gradle
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath "se.lovef:gradle-git-version-plugin:0.2.0"
-    }
+plugins {
+    id 'se.lovef.git-version' version '0.2.1'
 }
-
-apply plugin: 'se.lovef.git-version'
 
 version gitVersion('1.0')
 
