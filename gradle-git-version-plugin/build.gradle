@@ -2,6 +2,7 @@ apply plugin: 'kotlin'
 apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.gradle.plugin-publish'
 
 description = "Gradle Git Version Plugin"
 
@@ -101,7 +102,7 @@ bintray {
         desc = project.description
         userOrg = user
         licenses = ['Apache-2.0']
-        labels = ["gradle", "gradle-plugin"]
+        labels = ['gradle', 'gradle-plugin', 'git', 'version']
         websiteUrl = info.github
         vcsUrl = info.git
         issueTrackerUrl = info.issues
@@ -119,6 +120,20 @@ bintray {
                 sign = true //Determines whether to GPG sign the files. The default is false
                 passphrase = null //Optional. The passphrase for GPG signing'
             }
+        }
+    }
+}
+
+pluginBundle {
+    website = info.github
+    vcsUrl = info.github
+    description = 'Creates version tags in git'
+    tags = ['git', 'version']
+
+    plugins {
+        gitVersionPlugin {
+            id = 'se.lovef.git-version'
+            displayName = 'Git Version'
         }
     }
 }
