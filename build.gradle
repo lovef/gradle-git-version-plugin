@@ -1,6 +1,6 @@
 buildscript {
     repositories {
-        mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath 'se.lovef:gradle-git-version-plugin:0.2.0'
@@ -8,8 +8,9 @@ buildscript {
 }
 
 plugins {
-    id "org.jetbrains.kotlin.jvm" version "1.2.41"
-    id "com.jfrog.bintray" version "1.8.0"
+    id 'org.jetbrains.kotlin.jvm' version '1.2.41' apply false
+    id 'com.jfrog.bintray' version '1.8.0' apply false
+    id 'com.gradle.plugin-publish' version '0.9.10' apply false
 }
 
 apply plugin: 'se.lovef.git-version'
@@ -22,6 +23,6 @@ allprojects {
     group 'se.lovef'
 
     repositories {
-        mavenCentral()
+        jcenter() // JCenter is used by the gradle portal
     }
 }
