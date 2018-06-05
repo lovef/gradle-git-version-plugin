@@ -5,7 +5,7 @@ plugins {
     id 'com.gradle.plugin-publish' version '0.9.10' apply false
 }
 
-version gitVersion('0.2')
+version gitVersion(baseVersion)
 println version
 
 allprojects {

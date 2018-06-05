@@ -20,6 +20,19 @@ dependencies {
     }
 }
 
+task setupPluginTest(dependsOn: publish) {
+    doLast {
+        rootProject.file('test-project/gradle.properties').text = "pluginVersion = $version"
+    }
+}
+
+task testPlugin(type: GradleBuild, dependsOn: setupPluginTest, group: 'verification') {
+    buildFile = rootProject.file('test-project/build.gradle')
+    tasks = ['printGitVersion']
+}
+
+check.dependsOn testPlugin
+
 
 def mavenDir = "build/repo"
 
