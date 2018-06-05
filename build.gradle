@@ -1,13 +1,15 @@
 buildscript {
     repositories {
         mavenCentral()
-        jcenter()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
         classpath 'se.lovef:gradle-git-version-plugin:0.2.0'
     }
+}
+
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.2.41"
+    id "com.jfrog.bintray" version "1.8.0"
 }
 
 apply plugin: 'se.lovef.git-version'
