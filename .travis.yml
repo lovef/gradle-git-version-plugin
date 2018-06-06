@@ -19,7 +19,7 @@ cache:
 deploy:
   provider: script
   script:
-    ./gradlew clean bintrayUpload;
+    ./gradlew clean bintrayUpload &&
     ./gradlew clean publishPlugins -Pgradle.publish.key=$GRADLE_PLUGIN_KEY -Pgradle.publish.secret=$GRADLE_PLUGIN_SECRET
   skip_cleanup: true
   on:
