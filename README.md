@@ -10,17 +10,16 @@ Example:
 // build.gradle
 
 plugins {
-    id 'se.lovef.git-version' version '0.2.1'
+    id 'se.lovef.git-version' version '0.2.3'
 }
 
 version gitVersion('1.0')
 
-println "gitVersion: " + gitVersion
+println "gitVersion: $gitVersion"
 
-//noinspection GroovyAssignabilityCheck
 task printGitVersion {
     doLast {
-        println "gitVersion: " + gitVersion
+        println "gitVersion: $gitVersion"
     }
 }
 
