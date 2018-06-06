@@ -11,15 +11,15 @@ buildscript {
 apply plugin: 'se.lovef.git-version'
 
 println "Version: $version"
-println "gitVersion with default values:        " + gitVersion
+println "gitVersion with default values:        $gitVersion"
 
 version gitVersion('1.0')
-println "gitVersion from explicit base version: " + gitVersion
+println "gitVersion from explicit base version: $gitVersion"
 
 task printGitVersion {
     doLast {
-        println "gitVersion: " + gitVersion
+        println "gitVersion: $gitVersion"
     }
 }
 
-printGitVersion.shouldRunAfter tag
+printGitVersion.mustRunAfter tag

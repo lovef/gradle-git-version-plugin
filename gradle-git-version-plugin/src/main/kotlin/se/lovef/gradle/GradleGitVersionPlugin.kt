@@ -41,7 +41,7 @@ class GradleGitVersionPlugin : Plugin<Project> {
         owner: GradleGitVersionPlugin,
         private val project: Project,
         private val gitVersion: GitVersion
-    ) : Closure<String>(owner) {
+    ) : Closure<String>(owner, owner) {
 
         var baseVersion = "0.0"
             set(value) {
@@ -52,6 +52,8 @@ class GradleGitVersionPlugin : Plugin<Project> {
         val version get() = gitVersion.version
 
         val tag get() = gitVersion.tag
+
+        fun doCall() = toString()
 
         fun doCall(baseVersion: String) = invoke(baseVersion)
 
