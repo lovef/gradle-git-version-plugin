@@ -26,6 +26,25 @@ task printGitVersion {
 printGitVersion.mustRunAfter tag
 ```
 
+```kotlin
+// build.gradle.kts
+
+plugins {
+    id("se.lovef.git-version") version "0.2.3"
+}
+
+version = gitVersion("1.0")
+
+println("gitVersion: $gitVersion")
+
+tasks.register("printGitVersion") {
+    doLast {
+        println("gitVersion: $gitVersion")
+    }
+    mustRunAfter(tasks["tag"])
+}
+```
+
 Output:
 
 ```bash
@@ -47,7 +66,7 @@ New version: 1.0.0
 > Task :printGitVersion
 gitVersion: { version: "1.0.0", tag: "v1.0.0" }
 
-BUILD SUCCESSFUL in 0s
+BUILD SUCCESSFUL in 1s
 2 actionable tasks: 2 executed
 ```
 
