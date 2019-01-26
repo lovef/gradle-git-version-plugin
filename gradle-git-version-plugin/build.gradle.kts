@@ -1,152 +1,160 @@
-apply plugin: 'kotlin'
-apply plugin: 'groovy'
-apply plugin: 'maven-publish'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'com.gradle.plugin-publish'
+import com.jfrog.bintray.gradle.BintrayExtension
+import groovy.lang.Closure
+import org.gradle.api.tasks.GradleBuild
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import se.lovef.git.GitVersion
+import se.lovef.gradle.GradleGitVersionPlugin
+import java.util.*
+
+plugins {
+    groovy
+    `maven-publish`
+    id("org.jetbrains.kotlin.jvm") version "1.2.41"
+    id("com.jfrog.bintray") version "1.8.0"
+    id("com.gradle.plugin-publish") version "0.9.10"
+}
 
 description = "Gradle Git Version Plugin"
 
-println "$group:${project.name}:$version"
+println("$group:${project.name}:$version")
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib"
-    compile gradleApi()
-    compile localGroovy()
+    compile("org.jetbrains.kotlin:kotlin-stdlib")
+    compile(gradleApi())
+    compile(localGroovy())
 
-    testCompile 'se.lovef:kotlin-assert-utils:0.5.0'
-    testCompile 'com.nhaarman:mockito-kotlin-kt1.1:1.5.0'
-    testCompile('org.spockframework:spock-core:1.1-groovy-2.4') {
-        exclude group: 'org.codehaus.groovy', module: 'groovy-all'
+    testCompile("se.lovef:kotlin-assert-utils:0.5.0")
+    testCompile("com.nhaarman:mockito-kotlin-kt1.1:1.5.0")
+    testCompile("org.spockframework:spock-core:1.1-groovy-2.4") {
+        exclude(group = "org.codehaus.groovy", module = "groovy-all")
     }
-}
-
-task setupPluginTest(dependsOn: publish) {
-    doLast {
-        rootProject.file('test-project/gradle.properties').text = "pluginVersion = $version"
-    }
-}
-
-task testPlugin(type: GradleBuild, dependsOn: setupPluginTest, group: 'verification') {
-    buildFile = rootProject.file('test-project/build.gradle')
-    tasks = ['printGitVersion']
-}
-
-check.dependsOn testPlugin
-
-
-def mavenDir = "build/repo"
-
-def info = [
-        "github": "https://github.com/lovef/gradle-git-version-plugin",
-        "git"   : "https://github.com/lovef/gradle-git-version-plugin.git",
-        "issues": "https://github.com/lovef/gradle-git-version-plugin/issues",
-]
-
-//noinspection GroovyAssignabilityCheck,GrUnresolvedAccess
-task sourceJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
 }
 
 sourceSets {
-    javadoc { resources { srcDir 'src/main/javadoc' } }
+    val javadoc by registering { resources { srcDir("src/main/javadoc") } }
+}
+
+tasks {
+    val setupPluginTest by registering {
+        dependsOn(publish)
+        doLast {
+            rootProject.file("test-project/gradle.properties").writeText("pluginVersion = $version")
+        }
+    }
+
+    val testPlugin by registering(GradleBuild::class) {
+        dependsOn(setupPluginTest)
+        group = "verification"
+        buildFile = rootProject.file("test-project/build.gradle")
+        tasks = listOf("printGitVersion")
+    }
+
+    check { dependsOn(testPlugin) }
+}
+
+val sourceJar by tasks.registering(Jar::class) {
+    classifier = "sources"
+    from(sourceSets.main.get().allSource)
 }
 
 /** Creates a javadoc jar with README to comply with Sonatypes requirements:
  * http://central.sonatype.org/pages/requirements.html */
-//noinspection GroovyAssignabilityCheck,GrUnresolvedAccess
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from sourceSets.javadoc.output
+val javadocJar by tasks.registering(Jar::class) {
+    dependsOn(tasks.javadoc)
+    classifier = "javadoc"
+    from(sourceSets["javadoc"].output)
 }
 
-//noinspection GrUnresolvedAccess
+val publication = "maven"
+val mavenDir = "build/repo"
+
+object Info {
+    const val github = "https://github.com/lovef/gradle-git-version-plugin"
+    const val git = "https://github.com/lovef/gradle-git-version-plugin.git"
+    const val issues = "https://github.com/lovef/gradle-git-version-plugin/issues"
+}
+
 publishing {
     publications {
-        maven(MavenPublication) {
-            from components.java
-            artifact sourceJar
-            artifact javadocJar
-            pom.withXml {
-                asNode().children().last() + {
-                    resolveStrategy = Closure.DELEGATE_FIRST
-                    name project.name
-                    description description
-                    url info.github
-                    scm {
-                        url info.github
-                        connection "scm:git:${info.git}"
-                        developerConnection "scm:git:${info.git}"
+        create<MavenPublication>(publication) {
+            from(components["java"])
+            artifact(sourceJar.get())
+            artifact(javadocJar.get())
+
+            @Suppress("UnstableApiUsage") pom {
+                name.set(project.name)
+                description.set(project.description)
+                url.set(Info.github)
+                scm {
+                    url.set(Info.github)
+                    connection.set("scm:git:${Info.git}")
+                    developerConnection.set("scm:git:${Info.git}")
+                }
+                licenses {
+                    license {
+                        name.set("Apache License Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0")
+                        distribution.set("repo")
                     }
-                    licenses {
-                        license {
-                            name 'Apache License Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0'
-                            distribution 'repo'
-                        }
-                    }
-                    developers {
-                        developer {
-                            id 'lovef'
-                            name 'Love F'
-                            email 'lovef.code@gmail.com'
-                        }
+                }
+                developers {
+                    developer {
+                        id.set("lovef")
+                        name.set("Love F")
+                        email.set("lovef.code@gmail.com")
                     }
                 }
             }
         }
-    }
-    repositories {
-        maven {
-            url mavenDir
-        }
-    }
-}
-
-//noinspection GrUnresolvedAccess
-bintray {
-    user = project.properties.BINTRAY_API_USER ?: System.getenv('BINTRAY_API_USER')
-    key = project.properties.BINTRAY_API_KEY ?: System.getenv('BINTRAY_API_KEY')
-    publications = ['maven']
-    //noinspection GrUnresolvedAccess
-    pkg {
-        repo = 'maven'
-        name = project.name
-        desc = project.description
-        userOrg = user
-        licenses = ['Apache-2.0']
-        labels = ['gradle', 'gradle-plugin', 'git', 'version']
-        websiteUrl = info.github
-        vcsUrl = info.git
-        issueTrackerUrl = info.issues
-        //noinspection GroovyAssignabilityCheck
-        publish = false
-        publicDownloadNumbers = true
-
-        //noinspection GroovyAssignabilityCheck
-        version {
-            name = project.version
-            vcsTag = gitVersion.tag
-            desc = project.description
-            //noinspection GrUnresolvedAccess
-            gpg {
-                sign = true //Determines whether to GPG sign the files. The default is false
-                passphrase = null //Optional. The passphrase for GPG signing'
+        repositories {
+            maven {
+                url = uri(mavenDir)
             }
         }
     }
 }
 
-pluginBundle {
-    website = info.github
-    vcsUrl = info.github
-    description = 'Creates version tags in git'
-    tags = ['git', 'version']
+bintray {
+    user = project.properties["BINTRAY_API_USER"]?.toString() ?: System.getenv("BINTRAY_API_USER")
+    key = project.properties["BINTRAY_API_KEY"]?.toString() ?: System.getenv("BINTRAY_API_KEY")
+    setPublications(publication)
 
-    plugins {
-        gitVersionPlugin {
-            id = 'se.lovef.git-version'
-            displayName = 'Git Version'
+    pkg(delegateClosureOf<BintrayExtension.PackageConfig> {
+        repo = "maven"
+        name = project.name
+        desc = project.description
+        userOrg = user
+        setLicenses("Apache-2.0")
+        setLabels("gradle", "gradle-plugin", "git", "version")
+        websiteUrl = Info.github
+        vcsUrl = Info.git
+        issueTrackerUrl = Info.issues
+        publish = false
+        publicDownloadNumbers = true
+
+        version(delegateClosureOf<BintrayExtension.VersionConfig> {
+            name = project.version.toString()
+            vcsTag = extra["tag"]?.toString()
+            desc = project.description
+            gpg(delegateClosureOf<BintrayExtension.GpgConfig> {
+                sign = true //Determines whether to GPG sign the files. The default is false
+                passphrase = null //Optional. The passphrase for GPG signing"
+            })
+        })
+    })
+}
+
+pluginBundle {
+    website = Info.github
+    vcsUrl = Info.github
+    description = "Creates version tags in git"
+    tags = listOf("git", "version")
+
+    (plugins) {
+        "gitVersionPlugin" {
+            id = "se.lovef.git-version"
+            displayName = "Git Version"
         }
     }
 }
