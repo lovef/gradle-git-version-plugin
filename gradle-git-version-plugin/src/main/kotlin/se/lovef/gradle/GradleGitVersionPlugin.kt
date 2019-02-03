@@ -11,12 +11,19 @@ import se.lovef.git.GitVersion
  */
 class GradleGitVersionPlugin : Plugin<Project> {
 
+    private object Properties {
+        const val baseVersion = "baseVersion"
+        const val useVersionCode = "useVersionCode"
+    }
+
     class Config(
         private val project: Project
     ) : GitVersion.Config {
         lateinit var gitVersionExtension: GitVersionExtension
         override val baseVersion: String
-            get() = project.properties["baseVersion"] as? String ?: gitVersionExtension.baseVersion
+            get() = project.properties[Properties.baseVersion] as? String ?: gitVersionExtension.baseVersion
+        override val useVersionCode: Boolean
+            get() = gitVersionExtension.useVersionCode
     }
 
     override fun apply(project: Project) {
@@ -53,17 +60,23 @@ class GradleGitVersionPlugin : Plugin<Project> {
 
         val tag get() = gitVersion.tag
 
+        val versionCode get() = gitVersion.versionCode
+
+        var useVersionCode = false
+
         fun doCall() = toString()
 
-        fun doCall(baseVersion: String) = invoke(baseVersion)
+        fun doCall(baseVersion: String) = invoke(baseVersion, true)
 
-        fun doCall(properties: Map<String, String?>): String {
-            properties["baseVersion"]?.let { baseVersion = it }
+        fun doCall(properties: Map<String, Any?>): String {
+            properties[Properties.baseVersion]?.let { baseVersion = it.toString() }
+            properties[Properties.useVersionCode]?.let { useVersionCode = it == true }
             return version
         }
 
-        operator fun invoke(baseVersion: String): String {
+        operator fun invoke(baseVersion: String, useVersionCode: Boolean = false): String {
             this.baseVersion = baseVersion
+            this.useVersionCode = useVersionCode
             return version
         }
 
