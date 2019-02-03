@@ -34,9 +34,10 @@ class GradleGitVersionPluginGroovyTest extends Specification {
 
     def "invoke gitVersion with properties"() {
         expect:
-        gitVersion.doCall(baseVersion: "123.456") == "123.456-SNAPSHOT"
-        gitVersion(baseVersion: "123.456") == "123.456-SNAPSHOT"
+        gitVersion.doCall(baseVersion: "123.456", useVersionCode: true) == "123.456-SNAPSHOT"
+        gitVersion(baseVersion: "123.456", useVersionCode: true) == "123.456-SNAPSHOT"
         gitVersion.version == "123.456-SNAPSHOT"
+        gitVersion.useVersionCode
     }
 
     def "invoke gitVersion with empty properties does not change existing properties"() {

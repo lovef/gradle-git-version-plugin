@@ -5,6 +5,7 @@ interface Git {
     fun publishTag(name: String)
     fun currentTags(): List<String>
     fun matchingTags(prefix: String): List<String>
+    fun lastTagWitchVersionCode(prefix: String): String?
 }
 
 class GitImpl(
@@ -28,6 +29,12 @@ class GitImpl(
         invokeGit("tag", "-l", "$prefix*")
             .split("\n")
             .filterNot { it.isBlank() }
+
+    override fun lastTagWitchVersionCode(prefix: String) = try {
+        invokeGit("describe", "--abbrev=0", "HEAD", "--tags", "--match", "\"$prefix*-*\"").trim()
+    } catch (e: Exception) {
+        null
+    }
 
     private fun invokeGit(vararg arguments: String): String {
         try {

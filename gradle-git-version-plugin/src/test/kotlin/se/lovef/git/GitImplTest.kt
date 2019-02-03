@@ -2,6 +2,7 @@ package se.lovef.git
 
 import com.nhaarman.mockito_kotlin.*
 import org.junit.Test
+import se.lovef.assert.v1.shouldBeNull
 import se.lovef.assert.v1.shouldContain
 import se.lovef.assert.v1.shouldEqual
 import se.lovef.assert.v1.throws
@@ -55,6 +56,31 @@ class GitImplTest {
         gitImpl.matchingTags(prefix) shouldEqual tagsWithPrefix
 
         verify(git).invoke("tag", "-l", "$prefix*")
+    }
+
+    @Test fun `last version tag with version code`() {
+        val prefix = "tagPrefix"
+        val tag = "${prefix}12.23.34-45"
+        doReturn(tag + "\n").whenever(git).invoke(any())
+
+        gitImpl.lastTagWitchVersionCode(prefix) shouldEqual tag
+
+        verifyGitInvoked("""describe --abbrev=0 HEAD --tags --match "$prefix*-*"""")
+    }
+
+    @Test fun `last version tag with version code when no match is found`() {
+        val toBeThrown = Exception()
+        doThrow(toBeThrown).whenever(git).invoke(any())
+        val prefix = "prefix"
+
+        gitImpl.lastTagWitchVersionCode(prefix).shouldBeNull()
+
+        verifyGitInvoked("""describe --abbrev=0 HEAD --tags --match "$prefix*-*"""")
+    }
+
+    private fun verifyGitInvoked(command: String) {
+        val arguments = command.split(' ').toTypedArray()
+        verify(git).invoke(*arguments)
     }
 }
 
