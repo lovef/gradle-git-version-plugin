@@ -10,6 +10,7 @@ class GitVersion(private val git: Git, val config: Config) {
     interface Config {
         val baseVersion: String
         val useVersionCode: Boolean
+        val forcedVersionCode: Int?
     }
 
     private val baseVersion get() = config.baseVersion
@@ -28,6 +29,7 @@ class GitVersion(private val git: Git, val config: Config) {
             if (!config.useVersionCode) {
                 return null
             }
+            config.forcedVersionCode?.let { return it }
             val tag = tag ?: return null
             val match = versionCodeRegex.find(tag) ?: return null
             return match.groupValues[1].toInt()
@@ -44,8 +46,9 @@ class GitVersion(private val git: Git, val config: Config) {
         val nextPatch = currentVersion?.patch?.plus(1) ?: 0
         var newTag = "$prefix$nextPatch"
         if (config.useVersionCode) {
-            val currentVersionCode = currentVersion?.versionCode ?: lastVersionCode("v")
-            val nextVersionCode = currentVersionCode?.plus(1) ?: 1
+            val nextVersionCode = config.forcedVersionCode
+                    ?: (currentVersion?.versionCode ?: lastVersionCode("v"))?.plus(1)
+                    ?: 1
             newTag += "-$nextVersionCode"
         }
 
@@ -73,9 +76,9 @@ class GitVersion(private val git: Git, val config: Config) {
         return Version(matchResult)
     }
 
-    private class Version(patchAndVersionMatcher: MatchResult): Comparable<Version> {
+    private class Version(patchAndVersionMatcher: MatchResult) : Comparable<Version> {
         val patch: Int = patchAndVersionMatcher.groupValues[1].toInt()
-        val versionCodeString = patchAndVersionMatcher.groupValues[3].let { if(it.isEmpty()) null else it }
+        val versionCodeString = patchAndVersionMatcher.groupValues[3].let { if (it.isEmpty()) null else it }
         val versionCode: Int? get() = versionCodeString?.toInt()
 
         override fun compareTo(other: Version) = this.patch.compareTo(other.patch)
