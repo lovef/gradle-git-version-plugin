@@ -23,12 +23,12 @@ class GradleGitVersionPluginKotlinTest {
             .also { it.appendText("""plugins { id("se.lovef.git-version")}""") }
     }
     private val printTask = """
-            tasks.register("print") {
-                doLast {
-                    println("> created version: " + gitVersion.version + ", version code " + gitVersion.versionCode + " <")
-                }
-                mustRunAfter(tasks["tag"])
+        tasks.register("print") {
+            doLast {
+                println("> created version: " + gitVersion.version + ", version code " + gitVersion.versionCode + " <")
             }
+            mustRunAfter(tasks["tag"])
+        }
     """.trimIndent()
 
     operator fun File.plusAssign(text: String) {
@@ -91,6 +91,20 @@ class GradleGitVersionPluginKotlinTest {
         val result = gradle("tag", "print")
         git.tag() shouldEqual listOf("v1.0.0-1")
         result.output shouldContain "> created version: 1.0.0, version code 1 <"
+        result.task(":tag")?.outcome shouldEqual TaskOutcome.SUCCESS
+    }
+
+    @Test fun `create version tag with forced version code`() {
+        buildGradleKts += """
+            version = gitVersion("1.0", useVersionCode = true)
+        """
+        buildGradleKts += printTask
+
+        git.initWithBuildFile()
+
+        val result = gradle("tag", "print", "-PversionCode=3")
+        git.tag() shouldEqual listOf("v1.0.0-3")
+        result.output shouldContain "> created version: 1.0.0, version code 3 <"
         result.task(":tag")?.outcome shouldEqual TaskOutcome.SUCCESS
     }
 }

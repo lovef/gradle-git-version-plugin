@@ -25,12 +25,12 @@ class GradleGitVersionPluginGroovyTest {
     }
 
     private val printTask = """
-            task print {
-                doLast {
-                    println "> created version: " + gitVersion.version + ", version code " + gitVersion.versionCode + ' <'
-                }
+        task print {
+            doLast {
+                println "> created version: " + gitVersion.version + ", version code " + gitVersion.versionCode + ' <'
             }
-            print.mustRunAfter tag
+        }
+        print.mustRunAfter tag
     """.trimIndent()
 
     operator fun File.plusAssign(@Language("groovy") text: String) {
@@ -93,6 +93,20 @@ class GradleGitVersionPluginGroovyTest {
         val result = gradle("tag", "print")
         git.tag() shouldEqual listOf("v1.0.0-1")
         result.output shouldContain "> created version: 1.0.0, version code 1 <"
+        result.task(":tag")?.outcome shouldEqual TaskOutcome.SUCCESS
+    }
+
+    @Test fun `create version tag with forced version code`() {
+        buildGradle += /* language=groovy */ """
+            version gitVersion(baseVersion: '1.0', useVersionCode: true)
+        """
+        buildGradle += printTask
+
+        git.initWithBuildFile()
+
+        val result = gradle("tag", "print", "-PversionCode=3")
+        git.tag() shouldEqual listOf("v1.0.0-3")
+        result.output shouldContain "> created version: 1.0.0, version code 3 <"
         result.task(":tag")?.outcome shouldEqual TaskOutcome.SUCCESS
     }
 }

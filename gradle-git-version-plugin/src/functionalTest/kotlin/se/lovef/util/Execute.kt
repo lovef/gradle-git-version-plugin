@@ -4,16 +4,15 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
- * Shorthand for [File.execute].
- * Assumes that all spaces are argument separators, so no argument may contain a string.
+ * Shorthand for [File.execute]. Assumes that all spaces are argument separators,
+ * so no argument may contain a space.
  * ```kotlin
  *  // Example
  *  directory exec "git status"
  *
- *  // This fails since "-m'A" and "message'" will be considered as two arguments
- *  directory exec "git commit -m'A message'"
+ *  // This fails since `'A` and `message'` will be considered as two arguments
+ *  directory exec "git commit -m 'A message'"
  * ```
-
  * Inspired by https://stackoverflow.com/a/41495542/1020871
  */
 infix fun File.exec(command: String): String {
@@ -22,12 +21,12 @@ infix fun File.exec(command: String): String {
 }
 
 /**
- * Executes command. Arguments may contain strings.
+ * Executes command. Arguments may contain strings. More appropriate than [File.exec]
+ * when using dynamic arguments.
  * ```kotlin
  *  // Example
- *  directory.execute("git", "commit", "-m'A message'")
+ *  directory.execute("git", "commit", "-m", "A message")
  * ```
-
  * Inspired by https://stackoverflow.com/a/41495542/1020871
  */
 fun File.execute(vararg arguments: String): String {

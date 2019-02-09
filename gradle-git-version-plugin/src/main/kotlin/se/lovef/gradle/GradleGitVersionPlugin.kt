@@ -16,6 +16,10 @@ class GradleGitVersionPlugin : Plugin<Project> {
         const val useVersionCode = "useVersionCode"
     }
 
+    private object Arguments {
+        const val versionCode = "versionCode"
+    }
+
     class Config(
         private val project: Project
     ) : GitVersion.Config {
@@ -24,6 +28,8 @@ class GradleGitVersionPlugin : Plugin<Project> {
             get() = project.properties[Properties.baseVersion] as? String ?: gitVersionExtension.baseVersion
         override val useVersionCode: Boolean
             get() = gitVersionExtension.useVersionCode
+        override val forcedVersionCode: Int?
+            get() = project.properties[Arguments.versionCode]?.toString()?.toInt()
     }
 
     override fun apply(project: Project) {

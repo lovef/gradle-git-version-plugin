@@ -44,6 +44,7 @@ class GitVersionTest {
     private val config = object : GitVersion.Config {
         override var baseVersion = "1.0"
         override var useVersionCode = false
+        override var forcedVersionCode: Int? = null
     }
     private val gitVersion = GitVersion(git, config)
     private val version get() = gitVersion.version
@@ -84,6 +85,19 @@ class GitVersionTest {
 
         version shouldEqual "1.0.123-3.4"
         versionCode.shouldBeNull()
+    }
+
+
+    @Test fun `version code can be forced with configuration`() {
+        config.useVersionCode = true
+        config.forcedVersionCode = 3
+        versionCode shouldEqual 3
+    }
+
+    @Test fun `forced version code is selected over tag version code`() {
+        config.useVersionCode = true
+        config.forcedVersionCode = 3
+        givenTags("v1.0.123-1").versionCode shouldEqual 3
     }
 
 
@@ -132,6 +146,13 @@ class GitVersionTest {
         config.useVersionCode = true
         gitVersion.createTag() shouldEqual "v1.0.0-1"
         git.currentTags() shouldEqual listOf("v1.0.0-1")
+    }
+
+    @Test fun `create release tag with forced version code`() {
+        config.useVersionCode = true
+        config.forcedVersionCode = 3
+        gitVersion.createTag() shouldEqual "v1.0.0-3"
+        git.currentTags() shouldEqual listOf("v1.0.0-3")
     }
 
     @Test fun `patch number is incremented when creating new tag`() {
