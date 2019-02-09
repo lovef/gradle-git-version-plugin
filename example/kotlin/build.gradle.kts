@@ -1,5 +1,5 @@
 plugins {
-    id("se.lovef.git-version") version "0.2.3"
+    id("se.lovef.git-version") version "0.3.1"
 }
 
 version = gitVersion("1.0")
