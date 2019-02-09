@@ -1,6 +1,5 @@
 package se.lovef.git
 
-import org.junit.Before
 import org.junit.Test
 import se.lovef.assert.v1.shouldBeNull
 import se.lovef.assert.v1.shouldContain
@@ -39,67 +38,52 @@ class GitVersionTest {
         else matchingTags[prefix] ?: emptyList()
     }
 
-    object Config : GitVersion.Config {
-        override lateinit var baseVersion: String
+    private val config = object : GitVersion.Config {
+        override var baseVersion = "1.0"
     }
+    private val gitVersion = GitVersion(git, config)
+    private val version get() = gitVersion.version
 
-    private val gitVersion = GitVersion(git, Config)
-
-    @Before fun before() {
-        Config.baseVersion = "1.0"
-    }
+    private fun givenTags(vararg tags: String) = apply { git.currentTags = tags.toList() }
 
     @Test fun `version defaults to base version with -SNAPSHOT suffix`() {
-        gitVersion.version shouldEqual "1.0-SNAPSHOT"
+        version shouldEqual "1.0-SNAPSHOT"
     }
 
-    @Test fun `version returns default on exception`() {
-        git.currentTags = listOf("v1.0.123")
-        gitVersion.version shouldEqual "1.0.123" // Control
+    @Test fun `version is default on exception`() {
+        givenTags("v1.0.123")
         git.shouldThrowException()
-        gitVersion.version shouldEqual "1.0-SNAPSHOT"
+
+        version shouldEqual "1.0-SNAPSHOT"
     }
 
     @Test fun `version is taken from current release tag if it exists`() {
-        git.currentTags = listOf("v1.0.123")
-        gitVersion.version shouldEqual "1.0.123"
-
-        git.currentTags = listOf("v0.1.123", "v1.0.123")
-        gitVersion.version shouldEqual "1.0.123"
+        givenTags("v1.0.123").version shouldEqual "1.0.123"
+        givenTags("v1.0.123-code").version shouldEqual "1.0.123-code"
+        givenTags("invalid-tag", "v1.0.123").version shouldEqual "1.0.123"
     }
 
     @Test fun `multiple or no release tags results in default version`() {
-        git.currentTags = listOf("v0.1.123")
-        gitVersion.version shouldEqual "1.0-SNAPSHOT"
-
-        git.currentTags = listOf("v0.1.0", "v1.0.0", "v1.0.1")
-        gitVersion.version shouldEqual "1.0-SNAPSHOT"
+        givenTags("v0.1.123").version shouldEqual "1.0-SNAPSHOT"
+        givenTags("v0.1.0", "v1.0.0", "v1.0.1").version shouldEqual "1.0-SNAPSHOT"
     }
 
 
     @Test fun `current release tag`() {
-        git.currentTags = listOf("v0.0.0", "v1.0.0", "v2.0.0")
-
-        gitVersion.tag shouldEqual "v1.0.0"
+        givenTags("v0.0.0", "v1.0.0", "v2.0.0").gitVersion.tag shouldEqual "v1.0.0"
     }
 
     @Test fun `current release tag default null`() {
-        git.currentTags = listOf("v0.0.0", "v2.0.0") // No tag matching the base version
-
-        gitVersion.tag.shouldBeNull()
+        givenTags("v0.0.0", "v2.0.0").gitVersion.tag.shouldBeNull()
     }
 
     @Test fun `multiple release tags defaults to null`() {
-        git.currentTags = listOf("v1.0.0", "v1.0.1") // Multiple tags matching the base version
-
-        gitVersion.tag.shouldBeNull()
+        givenTags("v1.0.0", "v1.0.1").gitVersion.tag.shouldBeNull()
     }
 
     @Test fun `current release tag returns null on exception`() {
-        git.currentTags = listOf("v0.0.0", "v1.0.0", "v2.0.0")
-        gitVersion.tag shouldEqual "v1.0.0" // Control
         git.shouldThrowException()
-        gitVersion.tag.shouldBeNull()
+        givenTags("v0.0.0", "v1.0.0", "v2.0.0").gitVersion.tag.shouldBeNull()
     }
 
 
