@@ -1,8 +1,12 @@
-apply plugin: 'kotlin'
-apply plugin: 'groovy'
-apply plugin: 'maven-publish'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'com.gradle.plugin-publish'
+plugins {
+    id 'kotlin'
+    id 'groovy'
+    id 'maven-publish'
+    id 'com.jfrog.bintray'
+    id 'com.gradle.plugin-publish'
+    id 'java-gradle-plugin'
+    id "com.palantir.idea-test-fix" version "0.1.0"
+}
 
 description = "Gradle Git Version Plugin"
 
@@ -13,7 +17,8 @@ dependencies {
     compile gradleApi()
     compile localGroovy()
 
-    testCompile 'se.lovef:kotlin-assert-utils:0.5.0'
+    testCompile gradleTestKit()
+    testCompile 'se.lovef:kotlin-assert-utils:0.8.0'
     testCompile 'com.nhaarman:mockito-kotlin-kt1.1:1.5.0'
     testCompile('org.spockframework:spock-core:1.1-groovy-2.4') {
         exclude group: 'org.codehaus.groovy', module: 'groovy-all'
@@ -32,6 +37,39 @@ task testPlugin(type: GradleBuild, dependsOn: setupPluginTest, group: 'verificat
 }
 
 check.dependsOn testPlugin
+
+sourceSets {
+    functionalTest {
+        kotlin {
+            srcDir file('src/functionalTest/kotlin')
+        }
+        resources {
+            srcDir file('src/functionalTest/resources')
+        }
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+task functionalTest(type: Test) {
+    testClassesDirs = sourceSets.functionalTest.output.classesDirs
+    classpath = sourceSets.functionalTest.runtimeClasspath
+    testLogging {
+        exceptionFormat = 'full'
+    }
+}
+
+test {
+    testLogging {
+        exceptionFormat = 'full'
+    }
+}
+
+check.dependsOn functionalTest
+
+gradlePlugin {
+    testSourceSets sourceSets.functionalTest
+}
 
 
 def mavenDir = "build/repo"
