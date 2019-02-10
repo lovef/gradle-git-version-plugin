@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/lovef/gradle-git-version-plugin.svg?branch=master)](https://travis-ci.org/lovef/gradle-git-version-plugin)
- [![Download](https://api.bintray.com/packages/lovef/maven/gradle-git-version-plugin/images/download.svg?version=0.3.1)](https://bintray.com/lovef/maven/gradle-git-version-plugin/0.3.1/link)
+[![Download](https://api.bintray.com/packages/lovef/maven/gradle-git-version-plugin/images/download.svg?version=0.3.2)](https://bintray.com/lovef/maven/gradle-git-version-plugin/0.3.2/link)
 
 # Gradle Git Version Plugin
 
@@ -11,7 +11,7 @@ Example:
 // build.gradle
 
 plugins {
-    id 'se.lovef.git-version' version '0.3.1'
+    id 'se.lovef.git-version' version '0.3.2'
 }
 
 version gitVersion('1.0')
@@ -31,7 +31,7 @@ printGitVersion.mustRunAfter tag
 // build.gradle.kts
 
 plugins {
-    id("se.lovef.git-version") version "0.3.1"
+    id("se.lovef.git-version") version "0.3.2"
 }
 
 version = gitVersion("1.0")
