@@ -5,7 +5,6 @@ package se.lovef.gradle
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.intellij.lang.annotations.Language
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -15,26 +14,25 @@ import se.lovef.util.exec
 import se.lovef.util.execute
 import java.io.File
 
-class GradleGitVersionPluginGroovyTest {
+class GradleGitVersionPluginKotlinTest {
 
     @get:Rule val testProjectDir = TemporaryFolder()
     private val dir get() = testProjectDir.root
-    private val buildGradle by lazy {
-        testProjectDir.newFile("build.gradle")
-            .also { it.appendText("plugins { id 'se.lovef.git-version' }") }
+    private val buildGradleKts by lazy {
+        testProjectDir.newFile("build.gradle.kts")
+            .also { it.appendText("""plugins { id("se.lovef.git-version")}""") }
     }
-
     private val printTask = """
-            task print {
+            tasks.register("print") {
                 doLast {
-                    println "> created version: " + gitVersion.version + ", version code " + gitVersion.versionCode + ' <'
+                    println("> created version: " + gitVersion.version + ", version code " + gitVersion.versionCode + " <")
                 }
+                mustRunAfter(tasks["tag"])
             }
-            print.mustRunAfter tag
     """.trimIndent()
 
-    operator fun File.plusAssign(@Language("groovy") text: String) {
-        buildGradle.appendText('\n' + text.trimIndent())
+    operator fun File.plusAssign(text: String) {
+        appendText('\n' + text.trimIndent())
     }
 
     private fun gradle(vararg command: String): BuildResult = GradleRunner.create()
@@ -49,7 +47,7 @@ class GradleGitVersionPluginGroovyTest {
 
         fun initWithBuildFile() = also {
             dir exec "git init"
-            execute("add", buildGradle.name)
+            execute("add", buildGradleKts.name)
             execute("commit", "-m", "added build.gradle")
         }
 
@@ -58,9 +56,9 @@ class GradleGitVersionPluginGroovyTest {
 
 
     @Test fun `set version from git`() {
-        buildGradle += /* language=groovy */ """
-            version gitVersion('1.0')
-            println "version: " + version
+        buildGradleKts += """
+            version = gitVersion("1.0")
+            println("version: " + version)
         """
 
         git.initWithBuildFile()
@@ -69,10 +67,10 @@ class GradleGitVersionPluginGroovyTest {
     }
 
     @Test fun `create version tag`() {
-        buildGradle += /* language=groovy */ """
-            version gitVersion('1.0')
+        buildGradleKts += """
+            version = gitVersion("1.0")
         """
-        buildGradle += printTask
+        buildGradleKts += printTask
 
         git.initWithBuildFile()
 
@@ -83,10 +81,10 @@ class GradleGitVersionPluginGroovyTest {
     }
 
     @Test fun `create version tag with version code`() {
-        buildGradle += /* language=groovy */ """
-            version gitVersion(baseVersion: '1.0', useVersionCode: true)
+        buildGradleKts += """
+            version = gitVersion("1.0", useVersionCode = true)
         """
-        buildGradle += printTask
+        buildGradleKts += printTask
 
         git.initWithBuildFile()
 
