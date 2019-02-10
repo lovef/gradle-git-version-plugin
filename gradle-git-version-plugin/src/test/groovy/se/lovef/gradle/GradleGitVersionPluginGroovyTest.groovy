@@ -19,6 +19,15 @@ class GradleGitVersionPluginGroovyTest extends Specification {
         gitVersion = project.extensions.getByName('gitVersion') as GradleGitVersionPlugin.GitVersionExtension
     }
 
+    def "gitVersion simple use"() {
+        gitVersion('123.456')
+
+        expect:
+        gitVersion.baseVersion == "123.456"
+        gitVersion.version == "123.456-SNAPSHOT"
+        !gitVersion.useVersionCode
+    }
+
     def "gitVersion implicit toString"() {
         expect:
         "$gitVersion" == gitVersion.toString()

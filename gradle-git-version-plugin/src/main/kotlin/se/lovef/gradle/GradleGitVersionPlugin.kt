@@ -66,7 +66,7 @@ class GradleGitVersionPlugin : Plugin<Project> {
 
         fun doCall() = toString()
 
-        fun doCall(baseVersion: String) = invoke(baseVersion, true)
+        fun doCall(baseVersion: String) = invoke(baseVersion)
 
         fun doCall(properties: Map<String, Any?>): String {
             properties[Properties.baseVersion]?.let { baseVersion = it.toString() }
